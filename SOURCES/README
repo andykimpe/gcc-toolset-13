@@ -1,0 +1,29 @@
+Package %{scl_name} is the main package for Red Hat GCC
+Toolset 13.  By installing the %{scl_name} package, you will get
+the working set of packages that are included in Red Hat GCC
+Toolset 13, which includes development and debugging tools.
+
+Usage: scl enable %{scl} <command>
+
+Red Hat GCC Toolset allows you to build and execute applications
+which are not located in the filesystem root hierarchy, but are
+stored in an alternative location, which is %{_scl_root} in case
+of the %{scl_name} collection.
+
+Examples:
+scl enable %{scl_name} 'command --arg'
+  Run a specific command with the argument --arg within the %{scl_name}
+  Red Hat GCC Toolset environment.
+
+scl enable %{scl_name} 'gcc'
+  Run GCC from the %{scl_name} Red Hat GCC Toolset.
+
+scl enable %{scl_name} 'bash'
+  Run an interactive shell wherein the %{scl_name} software collection
+  is enabled.
+
+scl enable %{scl_name} 'man gcc'
+  Show man pages for the gcc command, which is a part of the
+  %{scl_name} Red Hat GCC Toolset.
+
+Report bugs to <http://bugzilla.redhat.com>.
