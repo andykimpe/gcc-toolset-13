@@ -1,46 +1,20 @@
 %global __python /usr/bin/python3
-
-%global scl_name_base    gcc-toolset
-%global scl_name_version 13
-%global scl              %{scl_name_base}-%{scl_name_version}
+%global scl gcc-toolset-13
+%global scl_prefix gcc-toolset-13-
 %global scl_name %scl
-%global macrosdir        %(d=%{_rpmconfigdir}/macros.d; [ -d $d ] || d=%{_root_sysconfdir}/rpm; echo $d)
-%global install_scl      1
-%if 0%{?fedora} >= 26 || 0%{?rhel} >= 8
-%global rh_layout        1
-%endif
-
-%if 0%{?fedora} >= 20 && 0%{?fedora} < 27
-# Requires scl-utils v2 for SCL integration, dropeed in F29
-%global with_modules     1
-%else
-# Works with file installed in /usr/share/Modules/modulefiles/
-%global with_modules     0
-%endif
-
-%scl_package %scl
-
-# do not produce empty debuginfo package
-%global debug_package %{nil}
+BuildRequires: scl-utils-build
+%{?scl_package:%scl_package %scl}
 
 Summary: Package that installs %scl
 Name: %scl_name
 Version: 13.0
-Release: 3%{?dist}
+Release: 2%{?dist}
 License: GPLv2+
 Group: Applications/File
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Source0: https://github.com/andykimpe/gcc-toolset-13/raw/el9/SOURCES/README
-Source1: https://github.com/andykimpe/gcc-toolset-13/raw/el9/SOURCES/sudo.sh
-Source2: https://github.com/andykimpe/gcc-toolset-13/raw/el9/SOURCES/gts-annobin-plugin-select.sh
-Source3: https://github.com/andykimpe/gcc-toolset-13/raw/el9/SOURCES/macros-build
-
-BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: scl-utils-build
-BuildRequires: help2man
-# Temporary work-around
-BuildRequires: iso-codes
-BuildRequires: environment-modules
+Source0: README
+Source1: sudo.sh
+Source2: gts-annobin-plugin-select.sh
 
 Requires: %{scl_prefix}runtime
 Requires: %{scl_prefix}gcc %{scl_prefix}gcc-c++ %{scl_prefix}gcc-gfortran
@@ -51,6 +25,8 @@ Requires: %{scl_prefix}annobin-plugin-gcc
 Obsoletes: %{name} < %{version}-%{release}
 Obsoletes: %{scl_prefix}dockerfiles < %{version}-%{release}
 
+BuildRequires: iso-codes
+BuildRequires: help2man
 %if 0%{?rhel} >= 8
 BuildRequires: python3-devel
 %endif
@@ -63,35 +39,18 @@ This is the main package for %scl Software Collection.
 %package runtime
 Summary: Package that handles %scl Software Collection.
 Group: Applications/File
-Requires:  scl-utils
-Requires:  environment-modules
-Requires(post): /usr/sbin/semanage
-Requires(post): /usr/sbin/selinuxenabled
-Provides:  %{?scl_name}-runtime(%{scl_vendor})
-Provides:  %{?scl_name}-runtime(%{scl_vendor})%{?_isa}
+Requires: scl-utils >= 20120927-11
+Obsoletes: %{name}-runtime < %{version}-%{release}
+%if 0%{?rhel} >= 7
+%{?scl_package:Requires(post): %{_root_sbindir}/semanage %{_root_sbindir}/restorecon}
+%{?scl_package:Requires(postun): %{_root_sbindir}/semanage %{_root_sbindir}/restorecon}
+%else
+Requires(post): libselinux policycoreutils-python
+Requires(postun): libselinux policycoreutils-python
+%endif
 
 %description runtime
 Package shipping essential scripts to work with %scl Software Collection.
-
-%package build
-Summary:   Package shipping basic build configuration
-Group:     Development/Languages
-Requires:  scl-utils-build
-Requires:  %{?scl_name}-runtime%{?_isa} = %{version}-%{release}
-
-%description build
-Package shipping essential configuration macros
-to build %scl Software Collection.
-
-
-%package scldevel
-Summary:   Package shipping development files for %scl
-Group:     Development/Languages
-Requires:  %{?scl_name}-runtime%{?_isa} = %{version}-%{release}
-
-%description scldevel
-Package shipping development files, especially usefull for development of
-packages depending on %scl Software Collection.
 
 %prep
 %setup -c -T
@@ -143,12 +102,6 @@ fi
 # Prepend the usual /opt/.../usr/lib{64,}.
 export LD_LIBRARY_PATH=%{_scl_root}\$rpmlibdir\$rpmlibdir64\$rpmlibdir32\${LD_LIBRARY_PATH:+:\${LD_LIBRARY_PATH}}
 export PKG_CONFIG_PATH=%{_libdir}/pkgconfig\${PKG_CONFIG_PATH:+:\${PKG_CONFIG_PATH}}
-EOF
-
-# generate rpm macros file for depended collections
-cat << EOF | tee scldev
-%%scl_%{scl_name_base}         %{scl}
-%%scl_prefix_%{scl_name_base}  %{scl_prefix}
 EOF
 
 # Sudo script
@@ -206,31 +159,25 @@ install -p -m 755 %{SOURCE2} %{buildroot}%{rrcdir}/
 %triggerpostun runtime -- %{scl_prefix}annobin-plugin-gcc
 %{rrcdir}/gts-annobin-plugin-select.sh %{_scl_root}
 %end
-# Add the scl_package_override macro
-#sed -e 's/@SCL@/%{scl}/g;s:@PREFIX@:/opt/%{scl_vendor}:;s/@VENDOR@/%{scl_vendor}/' %{SOURCE3} \
-#  | tee -a %{buildroot}%{_root_sysconfdir}/rpm/macros.%{scl}-config
-sed -e 's/@SCL@/%{scl}/g;s:@PREFIX@:/opt/%{scl_vendor}:;s/@VENDOR@/%{scl_vendor}/' %{SOURCE3}
-cat %{SOURCE3} > %{buildroot}%{_root_sysconfdir}/rpm/macros.%{scl}-config
 
-# Move in correct location, if needed
-if [ "%{_root_sysconfdir}/rpm" != "%{macrosdir}" ]; then
-  mv  %{buildroot}%{_root_sysconfdir}/rpm/macros.%{scl}-config \
-      %{buildroot}%{macrosdir}/macros.%{scl}-config
-fi
+%files
+%doc README
+%{_mandir}/man7/%{?scl_name}.*
+
+%files runtime
+%attr(0755,-,-) %{rrcdir}/gts-annobin-plugin-select.sh
+%scl_files
+%{_root_sysconfdir}/rpm/macros.%{scl}-enable
+%attr(0644,root,root) %verify(not md5 size mtime) %ghost %config(missingok,noreplace) %{_sysconfdir}/selinux-equiv.created
+%dir %{_scl_root}/etc/alternatives
+%dir %{_datadir}/appdata
 
 %post runtime
-# Simple copy of context from system root to SCL root.
-semanage fcontext -a -e /                      %{?_scl_root}     &>/dev/null || :
-%if 0%{?fedora} >= 26 || 0%{?rhel} >= 8
-semanage fcontext -a -e %{_root_sysconfdir}    %{_sysconfdir}    &>/dev/null || :
-semanage fcontext -a -e %{_root_localstatedir} %{_localstatedir} &>/dev/null || :
-%endif
-selinuxenabled && load_policy || :
-restorecon -R %{?_scl_root}     &>/dev/null || :
-%if 0%{?fedora} >= 26 || 0%{?rhel} >= 8
-restorecon -R %{_sysconfdir}    &>/dev/null || :
-restorecon -R %{_localstatedir} &>/dev/null || :
-%endif
+if [ ! -f %{_sysconfdir}/selinux-equiv.created ]; then
+  /usr/sbin/semanage fcontext -a -e / %{_scl_root}
+  restorecon -R %{_scl_root}
+  touch %{_sysconfdir}/selinux-equiv.created
+fi
 
 %preun runtime
 [ $1 = 0 ] && rm -f %{_sysconfdir}/selinux-equiv.created || :
@@ -240,28 +187,6 @@ if [ $1 = 0 ]; then
   /usr/sbin/semanage fcontext -d %{_scl_root}
   [ -d %{_scl_root} ] && restorecon -R %{_scl_root} || :
 fi
-
-%files
-%doc README
-%{_mandir}/man7/%{?scl_name}.*
-
-%if 0%{?fedora} < 19 && 0%{?rhel} < 7
-%files runtime
-%else
-%files runtime -f filesystem
-%endif
-%defattr(-,root,root)
-%attr(0755,-,-) %{rrcdir}/gts-annobin-plugin-select.sh
-%scl_files
-%{_root_sysconfdir}/rpm/macros.%{scl}-enable
-%attr(0644,root,root) %verify(not md5 size mtime) %ghost %config(missingok,noreplace) %{_sysconfdir}/selinux-equiv.created
-%dir %{_scl_root}/etc/alternatives
-%dir %{_datadir}/appdata
-
-%files build
-%defattr(-,root,root)
-%{macrosdir}/macros.%{scl}-config
-
 
 %changelog
 * Thu Aug  3 2023 Marek Polacek <polacek@redhat.com> - 13.0-2
