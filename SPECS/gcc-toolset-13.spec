@@ -26,14 +26,14 @@
 Summary: Package that installs %scl
 Name: %scl_name
 Version: 13.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: GPLv2+
 Group: Applications/File
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Source0: https://github.com/andykimpe/gcc-toolset-13/raw/el9/SOURCES/README
 Source1: https://github.com/andykimpe/gcc-toolset-13/raw/el9/SOURCES/sudo.sh
 Source2: https://github.com/andykimpe/gcc-toolset-13/raw/el9/SOURCES/gts-annobin-plugin-select.sh
-Source3: https://github.com/andykimpe/gcc-toolset-13/raw/el9/SOURCES/gts-annobin-plugin-select.sh
+Source3: https://github.com/andykimpe/gcc-toolset-13/raw/el9/SOURCES/macros-build
 
 BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: scl-utils-build
@@ -206,27 +206,29 @@ install -p -m 755 %{SOURCE2} %{buildroot}%{rrcdir}/
 %triggerpostun runtime -- %{scl_prefix}annobin-plugin-gcc
 %{rrcdir}/gts-annobin-plugin-select.sh %{_scl_root}
 %end
+# Add the scl_package_override macro
+sed -e 's/@SCL@/%{scl}/g;s:@PREFIX@:/opt/%{scl_vendor}:;s/@VENDOR@/%{scl_vendor}/' %{SOURCE3} \
+  | tee -a %{buildroot}%{_root_sysconfdir}/rpm/macros.%{scl}-config
 
-
-
-%files
-%doc README
-%{_mandir}/man7/%{?scl_name}.*
-
-%files runtime
-%attr(0755,-,-) %{rrcdir}/gts-annobin-plugin-select.sh
-%scl_files
-%{_root_sysconfdir}/rpm/macros.%{scl}-enable
-%attr(0644,root,root) %verify(not md5 size mtime) %ghost %config(missingok,noreplace) %{_sysconfdir}/selinux-equiv.created
-%dir %{_scl_root}/etc/alternatives
-%dir %{_datadir}/appdata
+# Move in correct location, if needed
+if [ "%{_root_sysconfdir}/rpm" != "%{macrosdir}" ]; then
+  mv  %{buildroot}%{_root_sysconfdir}/rpm/macros.%{scl}-config \
+      %{buildroot}%{macrosdir}/macros.%{scl}-config
+fi
 
 %post runtime
-if [ ! -f %{_sysconfdir}/selinux-equiv.created ]; then
-  /usr/sbin/semanage fcontext -a -e / %{_scl_root}
-  restorecon -R %{_scl_root}
-  touch %{_sysconfdir}/selinux-equiv.created
-fi
+# Simple copy of context from system root to SCL root.
+semanage fcontext -a -e /                      %{?_scl_root}     &>/dev/null || :
+%if 0%{?fedora} >= 26 || 0%{?rhel} >= 8
+semanage fcontext -a -e %{_root_sysconfdir}    %{_sysconfdir}    &>/dev/null || :
+semanage fcontext -a -e %{_root_localstatedir} %{_localstatedir} &>/dev/null || :
+%endif
+selinuxenabled && load_policy || :
+restorecon -R %{?_scl_root}     &>/dev/null || :
+%if 0%{?fedora} >= 26 || 0%{?rhel} >= 8
+restorecon -R %{_sysconfdir}    &>/dev/null || :
+restorecon -R %{_localstatedir} &>/dev/null || :
+%endif
 
 %preun runtime
 [ $1 = 0 ] && rm -f %{_sysconfdir}/selinux-equiv.created || :
@@ -236,6 +238,28 @@ if [ $1 = 0 ]; then
   /usr/sbin/semanage fcontext -d %{_scl_root}
   [ -d %{_scl_root} ] && restorecon -R %{_scl_root} || :
 fi
+
+%files
+%doc README
+%{_mandir}/man7/%{?scl_name}.*
+
+%if 0%{?fedora} < 19 && 0%{?rhel} < 7
+%files runtime
+%else
+%files runtime -f filesystem
+%endif
+%defattr(-,root,root)
+%attr(0755,-,-) %{rrcdir}/gts-annobin-plugin-select.sh
+%scl_files
+%{_root_sysconfdir}/rpm/macros.%{scl}-enable
+%attr(0644,root,root) %verify(not md5 size mtime) %ghost %config(missingok,noreplace) %{_sysconfdir}/selinux-equiv.created
+%dir %{_scl_root}/etc/alternatives
+%dir %{_datadir}/appdata
+
+%files build
+%defattr(-,root,root)
+%{macrosdir}/macros.%{scl}-config
+
 
 %changelog
 * Thu Aug  3 2023 Marek Polacek <polacek@redhat.com> - 13.0-2
