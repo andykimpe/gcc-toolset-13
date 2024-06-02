@@ -1,6 +1,5 @@
 %global __python /usr/bin/python3
 
-
 %global scl_name_base    gcc-toolset
 %global scl_name_version 13
 %global scl              %{scl_name_base}-%{scl_name_version}
