@@ -12,9 +12,9 @@ Release: 2%{?dist}
 License: GPLv2+
 Group: Applications/File
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Source0: README
-Source1: sudo.sh
-Source2: gts-annobin-plugin-select.sh
+Source0: https://github.com/andykimpe/gcc-toolset-13/raw/el9/SOURCES/README
+Source1: https://github.com/andykimpe/gcc-toolset-13/raw/el9/SOURCES/sudo.sh
+Source2: https://github.com/andykimpe/gcc-toolset-13/raw/el9/SOURCES/gts-annobin-plugin-select.sh
 
 Requires: %{scl_prefix}runtime
 Requires: %{scl_prefix}gcc %{scl_prefix}gcc-c++ %{scl_prefix}gcc-gfortran
