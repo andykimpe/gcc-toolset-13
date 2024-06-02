@@ -220,3 +220,4 @@ fi
 
 * Tue May 10 2022 Marek Polacek <polacek@redhat.com> - 12.0-0
 - new package (#2077277)
+
