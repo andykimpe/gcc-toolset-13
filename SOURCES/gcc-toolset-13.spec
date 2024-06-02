@@ -42,8 +42,7 @@ Group: Applications/File
 Requires: scl-utils >= 20120927-11
 Obsoletes: %{name}-runtime < %{version}-%{release}
 %if 0%{?rhel} >= 7
-%{?scl_package:Requires(post): %{_root_sbindir}/semanage %{_root_sbindir}/restorecon}
-%{?scl_package:Requires(postun): %{_root_sbindir}/semanage %{_root_sbindir}/restorecon}
+Requires: /usr/sbin/semanage /usr/sbin/restorecon}
 %else
 Requires(post): libselinux policycoreutils-python
 Requires(postun): libselinux policycoreutils-python
