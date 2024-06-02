@@ -1,0 +1,3 @@
+%scl_vendor   @VENDOR@
+%_scl_prefix  @PREFIX@
+%_sclreq     (@VENDOR@)
