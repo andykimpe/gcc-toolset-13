@@ -31,6 +31,7 @@ BuildRequires: help2man
 BuildRequires: python3-devel
 %endif
 %generate_buildrequires
+Requires: %scl_runtime
 
 %global rrcdir %{_scl_root}/usr/lib/rpm/redhat
 
