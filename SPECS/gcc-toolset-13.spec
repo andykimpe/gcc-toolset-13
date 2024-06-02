@@ -41,13 +41,10 @@ Summary: Package that handles %scl Software Collection.
 Group: Applications/File
 Requires: scl-utils >= 20120927-11
 Obsoletes: %{name}-runtime < %{version}-%{release}
-%if 0%{?rhel} >= 7
-%{?scl_package:Requires(post): /usr/sbin/semanage /usr/sbin/restorecon}
-%{?scl_package:Requires(postun): /usr/sbin/semanage /usr/sbin/restorecon}
-%else
-Requires(post): libselinux policycoreutils-python
-Requires(postun): libselinux policycoreutils-python
-%endif
+Requires:  scl-utils
+Requires:  environment-modules
+Requires(post): %{_root_sbindir}/semanage
+Requires(post): %{_root_sbindir}/selinuxenabled
 
 %description runtime
 Package shipping essential scripts to work with %scl Software Collection.
