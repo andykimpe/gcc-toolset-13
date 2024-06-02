@@ -39,7 +39,6 @@ This is the main package for %scl Software Collection.
 %package runtime
 Summary: Package that handles %scl Software Collection.
 Group: Applications/File
-Requires: scl-utils >= 20120927-11
 Obsoletes: %{name}-runtime < %{version}-%{release}
 Requires:  scl-utils
 Requires:  environment-modules
