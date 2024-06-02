@@ -207,8 +207,10 @@ install -p -m 755 %{SOURCE2} %{buildroot}%{rrcdir}/
 %{rrcdir}/gts-annobin-plugin-select.sh %{_scl_root}
 %end
 # Add the scl_package_override macro
-sed -e 's/@SCL@/%{scl}/g;s:@PREFIX@:/opt/%{scl_vendor}:;s/@VENDOR@/%{scl_vendor}/' %{SOURCE3} \
-  | tee -a %{buildroot}%{_root_sysconfdir}/rpm/macros.%{scl}-config
+#sed -e 's/@SCL@/%{scl}/g;s:@PREFIX@:/opt/%{scl_vendor}:;s/@VENDOR@/%{scl_vendor}/' %{SOURCE3} \
+#  | tee -a %{buildroot}%{_root_sysconfdir}/rpm/macros.%{scl}-config
+sed -e 's/@SCL@/%{scl}/g;s:@PREFIX@:/opt/%{scl_vendor}:;s/@VENDOR@/%{scl_vendor}/' %{SOURCE3}
+cat %{SOURCE3} > %{buildroot}%{_root_sysconfdir}/rpm/macros.%{scl}-config
 
 # Move in correct location, if needed
 if [ "%{_root_sysconfdir}/rpm" != "%{macrosdir}" ]; then
