@@ -30,6 +30,7 @@ BuildRequires: help2man
 %if 0%{?rhel} >= 8
 BuildRequires: python3-devel
 %endif
+%generate_buildrequires
 
 %global rrcdir %{_scl_root}/usr/lib/rpm/redhat
 
