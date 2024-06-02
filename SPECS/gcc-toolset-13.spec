@@ -42,8 +42,8 @@ Group: Applications/File
 Obsoletes: %{name}-runtime < %{version}-%{release}
 Requires:  scl-utils
 Requires:  environment-modules
-Requires(post): %{_root_sbindir}/semanage
-Requires(post): %{_root_sbindir}/selinuxenabled
+Requires(post): /usr/sbin/semanage
+Requires(post): /usr/sbin/selinuxenabled
 
 %description runtime
 Package shipping essential scripts to work with %scl Software Collection.
