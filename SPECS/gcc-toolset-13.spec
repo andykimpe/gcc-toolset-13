@@ -1,6 +1,7 @@
 %global __python /usr/bin/python3
 %global scl gcc-toolset-13
 %global scl_prefix gcc-toolset-13-
+%global scl_runtime gcc-toolset-13-runtime
 %global scl_name %scl
 BuildRequires: scl-utils-build
 %{?scl_package:%scl_package %scl}
