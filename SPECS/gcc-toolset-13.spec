@@ -33,6 +33,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Source0: https://github.com/andykimpe/gcc-toolset-13/raw/el9/SOURCES/README
 Source1: https://github.com/andykimpe/gcc-toolset-13/raw/el9/SOURCES/sudo.sh
 Source2: https://github.com/andykimpe/gcc-toolset-13/raw/el9/SOURCES/gts-annobin-plugin-select.sh
+Source3: https://github.com/andykimpe/gcc-toolset-13/raw/el9/SOURCES/gts-annobin-plugin-select.sh
 
 BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: scl-utils-build
@@ -71,6 +72,26 @@ Provides:  %{?scl_name}-runtime(%{scl_vendor})%{?_isa}
 
 %description runtime
 Package shipping essential scripts to work with %scl Software Collection.
+
+%package build
+Summary:   Package shipping basic build configuration
+Group:     Development/Languages
+Requires:  scl-utils-build
+Requires:  %{?scl_name}-runtime%{?_isa} = %{version}-%{release}
+
+%description build
+Package shipping essential configuration macros
+to build %scl Software Collection.
+
+
+%package scldevel
+Summary:   Package shipping development files for %scl
+Group:     Development/Languages
+Requires:  %{?scl_name}-runtime%{?_isa} = %{version}-%{release}
+
+%description scldevel
+Package shipping development files, especially usefull for development of
+packages depending on %scl Software Collection.
 
 %prep
 %setup -c -T
@@ -122,6 +143,12 @@ fi
 # Prepend the usual /opt/.../usr/lib{64,}.
 export LD_LIBRARY_PATH=%{_scl_root}\$rpmlibdir\$rpmlibdir64\$rpmlibdir32\${LD_LIBRARY_PATH:+:\${LD_LIBRARY_PATH}}
 export PKG_CONFIG_PATH=%{_libdir}/pkgconfig\${PKG_CONFIG_PATH:+:\${PKG_CONFIG_PATH}}
+EOF
+
+# generate rpm macros file for depended collections
+cat << EOF | tee scldev
+%%scl_%{scl_name_base}         %{scl}
+%%scl_prefix_%{scl_name_base}  %{scl_prefix}
 EOF
 
 # Sudo script
@@ -179,6 +206,8 @@ install -p -m 755 %{SOURCE2} %{buildroot}%{rrcdir}/
 %triggerpostun runtime -- %{scl_prefix}annobin-plugin-gcc
 %{rrcdir}/gts-annobin-plugin-select.sh %{_scl_root}
 %end
+
+
 
 %files
 %doc README
