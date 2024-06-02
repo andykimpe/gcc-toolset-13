@@ -1,10 +1,27 @@
 %global __python /usr/bin/python3
-%global scl gcc-toolset-13
-%global scl_prefix gcc-toolset-13-
-%global scl_runtime gcc-toolset-13-runtime
+
+%global scl_name_base    gcc-toolset
+%global scl_name_version 13
+%global scl              %{scl_name_base}-%{scl_name_version}
 %global scl_name %scl
-BuildRequires: scl-utils-build
-%{?scl_package:%scl_package %scl}
+%global macrosdir        %(d=%{_rpmconfigdir}/macros.d; [ -d $d ] || d=%{_root_sysconfdir}/rpm; echo $d)
+%global install_scl      1
+%if 0%{?fedora} >= 26 || 0%{?rhel} >= 8
+%global rh_layout        1
+%endif
+
+%if 0%{?fedora} >= 20 && 0%{?fedora} < 27
+# Requires scl-utils v2 for SCL integration, dropeed in F29
+%global with_modules     1
+%else
+# Works with file installed in /usr/share/Modules/modulefiles/
+%global with_modules     0
+%endif
+
+%scl_package %scl
+
+# do not produce empty debuginfo package
+%global debug_package %{nil}
 
 Summary: Package that installs %scl
 Name: %scl_name
@@ -17,6 +34,13 @@ Source0: https://github.com/andykimpe/gcc-toolset-13/raw/el9/SOURCES/README
 Source1: https://github.com/andykimpe/gcc-toolset-13/raw/el9/SOURCES/sudo.sh
 Source2: https://github.com/andykimpe/gcc-toolset-13/raw/el9/SOURCES/gts-annobin-plugin-select.sh
 
+BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+BuildRequires: scl-utils-build
+BuildRequires: help2man
+# Temporary work-around
+BuildRequires: iso-codes
+BuildRequires: environment-modules
+
 Requires: %{scl_prefix}runtime
 Requires: %{scl_prefix}gcc %{scl_prefix}gcc-c++ %{scl_prefix}gcc-gfortran
 Requires: %{scl_prefix}binutils
@@ -26,12 +50,9 @@ Requires: %{scl_prefix}annobin-plugin-gcc
 Obsoletes: %{name} < %{version}-%{release}
 Obsoletes: %{scl_prefix}dockerfiles < %{version}-%{release}
 
-BuildRequires: iso-codes
-BuildRequires: help2man
 %if 0%{?rhel} >= 8
 BuildRequires: python3-devel
 %endif
-Requires: %scl_runtime
 
 %global rrcdir %{_scl_root}/usr/lib/rpm/redhat
 
@@ -41,11 +62,12 @@ This is the main package for %scl Software Collection.
 %package runtime
 Summary: Package that handles %scl Software Collection.
 Group: Applications/File
-Obsoletes: %{name}-runtime < %{version}-%{release}
 Requires:  scl-utils
 Requires:  environment-modules
 Requires(post): /usr/sbin/semanage
 Requires(post): /usr/sbin/selinuxenabled
+Provides:  %{?scl_name}-runtime(%{scl_vendor})
+Provides:  %{?scl_name}-runtime(%{scl_vendor})%{?_isa}
 
 %description runtime
 Package shipping essential scripts to work with %scl Software Collection.
