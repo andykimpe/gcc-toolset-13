@@ -5,6 +5,7 @@
 BuildRequires: scl-utils-build
 %{?scl_package:%scl_package %scl}
 
+
 Summary: Package that installs %scl
 Name: %scl_name
 Version: 13.0
